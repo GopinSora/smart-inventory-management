@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-base: #fdfbf5;
+    --bg-elev: #ffffff;
+    --bg-warm: #faf6ec;
+    --border-soft: #ece5d3;
+    --border-mid: #ddd2b3;
+    --text-primary: #353430;
+    --text-secondary: #595851;
+    --text-muted: #8a8880;
+    --accent: #b45309;
+    --accent-soft: #fff7ed;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html, body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  }
+
+  ::selection {
+    background-color: rgba(180, 83, 9, 0.15);
+    color: var(--text-primary);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #e0d5b8;
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #c4a662;
+  }
+
+  input, textarea, select, button {
+    font-family: inherit;
+    color: inherit;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  button:focus-visible {
+    outline: 2px solid #b45309;
+    outline-offset: 2px;
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8880' stroke-width='2.5' stroke-linecap='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    padding-right: 2.25rem;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+  }
+}
+
+@layer utilities {
+  .num-tab {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .grid-paper {
+    background-image:
+      linear-gradient(rgba(180, 140, 80, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(180, 140, 80, 0.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .warm-glow {
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(252, 211, 77, 0.20), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgba(251, 146, 60, 0.10), transparent 60%);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
