@@ -23,10 +23,10 @@ export default function Modal({ children, onClose, size = 'md' }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-ink-950/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div
         className={cn(
-          'relative bg-cream-50 border border-cream-200 rounded-t-2xl sm:rounded-2xl w-full max-h-[92vh] overflow-y-auto shadow-lifted animate-scale-in',
+          'relative bg-cream-50 dark:bg-[#1e1d1a] border border-cream-200 dark:border-[#2a2925] rounded-t-2xl sm:rounded-2xl w-full max-h-[92vh] overflow-y-auto shadow-lifted animate-scale-in',
           sizes[size]
         )}
       >
@@ -41,15 +41,15 @@ export function ModalHeader({ kicker, title, onClose }) {
     <div className="flex items-start justify-between gap-4 p-6 pb-4">
       <div>
         {kicker && (
-          <div className="text-[10px] uppercase tracking-[0.22em] font-mono text-ink-500 mb-1.5">
+          <div className="text-[10px] uppercase tracking-[0.22em] font-mono text-ink-500 dark:text-[#7a7870] mb-1.5">
             {kicker}
           </div>
         )}
-        <h3 className="font-display text-2xl text-ink-900 leading-tight">{title}</h3>
+        <h3 className="font-display text-2xl text-ink-900 dark:text-[#f0ede6] leading-tight">{title}</h3>
       </div>
       <button
         onClick={onClose}
-        className="text-ink-500 hover:text-ink-900 p-1 rounded-md hover:bg-cream-100 transition-colors"
+        className="text-ink-500 dark:text-[#7a7870] hover:text-ink-900 dark:hover:text-[#f0ede6] p-1 rounded-md hover:bg-cream-100 dark:hover:bg-[#2a2925] transition-colors"
         aria-label="Close"
       >
         <X className="w-5 h-5" />
@@ -64,7 +64,7 @@ export function ModalBody({ children, className }) {
 
 export function ModalFooter({ children, className }) {
   return (
-    <div className={cn('flex items-center justify-end gap-2 p-6 pt-5 mt-2 border-t border-cream-200', className)}>
+    <div className={cn('flex items-center justify-end gap-2 p-6 pt-5 mt-2 border-t border-cream-200 dark:border-[#2a2925]', className)}>
       {children}
     </div>
   );

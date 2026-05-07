@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Trash2, GitMerge } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Modal, { ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
@@ -9,7 +9,7 @@ import { CATEGORIES, CONDITION_OPTIONS } from '@/config/constants';
 import { useInventory } from '@/context/InventoryContext';
 
 export default function ItemFormModal({ mode, initial, onClose, onRequestDelete }) {
-  const { rooms, addItem, editItem } = useInventory();
+  const { rooms, items, addItem, editItem } = useInventory();
 
   const [form, setForm] = useState({
     category: initial?.category || 'Keyboard',
@@ -26,6 +26,22 @@ export default function ItemFormModal({ mode, initial, onClose, onRequestDelete 
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+  // Live duplicate detection for "add" mode
+  const duplicate = useMemo(() => {
+    if (mode !== 'add') return null;
+    if (!form.brand.trim() || !form.model.trim()) return null;
+    const roomTarget = form.roomId || null;
+    return (
+      items.find(
+        (it) =>
+          it.category === form.category &&
+          (it.brand || '').trim().toLowerCase() === form.brand.trim().toLowerCase() &&
+          (it.model || '').trim().toLowerCase() === form.model.trim().toLowerCase() &&
+          (it.roomId || null) === roomTarget
+      ) || null
+    );
+  }, [mode, form.category, form.brand, form.model, form.roomId, items]);
+
   const submit = async () => {
     const e = {};
     if (!form.brand.trim()) e.brand = 'Required';
@@ -41,8 +57,15 @@ export default function ItemFormModal({ mode, initial, onClose, onRequestDelete 
         await editItem(initial.id, form);
         toast.success('Item updated');
       } else {
-        await addItem(form);
-        toast.success('Item added');
+        const result = await addItem(form);
+        if (result?.merged) {
+          toast.success(
+            `Merged! +${result.addedQty} added → total now ${result.newTotal} units`,
+            { icon: '🔗', duration: 4000 }
+          );
+        } else {
+          toast.success('Item added');
+        }
       }
       onClose();
     } catch (err) {
@@ -63,6 +86,24 @@ export default function ItemFormModal({ mode, initial, onClose, onRequestDelete 
 
       <ModalBody>
         <div className="space-y-4">
+
+          {/* Duplicate merge banner */}
+          {duplicate && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-sm">
+              <GitMerge className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+              <div>
+                <span className="font-semibold">Duplicate detected.</span>{' '}
+                This item already exists in the same room with{' '}
+                <span className="font-semibold">{duplicate.quantity} units</span>. Submitting will
+                add your quantity on top (total:{' '}
+                <span className="font-semibold">
+                  {Number(duplicate.quantity) + (Number(form.quantity) || 0)}
+                </span>
+                ).
+              </div>
+            </div>
+          )}
+
           <Field label="Category" required>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {CATEGORIES.map((c) => {
@@ -73,11 +114,10 @@ export default function ItemFormModal({ mode, initial, onClose, onRequestDelete 
                     key={c.id}
                     type="button"
                     onClick={() => set('category', c.id)}
-                    className={`flex flex-col items-center gap-1.5 py-3 rounded-lg border text-xs transition-all ${
-                      active
-                        ? 'bg-accent-50 border-accent-700 text-accent-800 shadow-soft'
-                        : 'bg-white border-cream-200 text-ink-600 hover:border-cream-400'
-                    }`}
+                    className={`flex flex-col items-center gap-1.5 py-3 rounded-lg border text-xs transition-all ${active
+                      ? 'bg-accent-50 dark:bg-orange-950/40 border-accent-700 dark:border-orange-600 text-accent-800 dark:text-orange-300 shadow-soft'
+                      : 'bg-white dark:bg-[#1e1d1a] border-cream-200 dark:border-[#38362f] text-ink-600 dark:text-[#7a7870] hover:border-cream-400 dark:hover:border-[#6b6655]'
+                      }`}
                   >
                     <Ico className="w-4 h-4" />
                     {c.id}
@@ -172,7 +212,13 @@ export default function ItemFormModal({ mode, initial, onClose, onRequestDelete 
             Cancel
           </Button>
           <Button onClick={submit} disabled={submitting}>
-            {submitting ? 'Saving…' : mode === 'add' ? 'Add item' : 'Save changes'}
+            {submitting
+              ? 'Saving…'
+              : mode === 'add'
+                ? duplicate
+                  ? 'Merge & Add'
+                  : 'Add item'
+                : 'Save changes'}
           </Button>
         </div>
       </ModalFooter>

@@ -1,6 +1,5 @@
-// Inventory Assistant — a rule-based NLU engine that answers questions
-// about the user's actual inventory data. No external API needed.
-// Works fully offline once the app loads.
+// Inventory Assistant — Smart rule-based NLU engine
+// Supports: data queries + in-app actions (add item, navigate, dark mode, etc.)
 
 import { CATEGORY_IDS } from '@/config/constants';
 
@@ -12,7 +11,7 @@ const CATEGORY_ALIASES = {
   CPU: ['cpu', 'cpus', 'computer', 'computers', 'pc', 'pcs', 'desktop', 'desktops', 'tower', 'towers'],
 };
 
-const matchCategory = (text) => {
+export const matchCategory = (text) => {
   const lower = text.toLowerCase();
   for (const cat of CATEGORY_IDS) {
     if (CATEGORY_ALIASES[cat].some((a) => new RegExp(`\\b${a}\\b`).test(lower))) {
@@ -38,7 +37,6 @@ const matchRoom = (text, rooms) => {
   for (const r of rooms) {
     if (r.name && lower.includes(r.name.toLowerCase())) return r;
   }
-  // partial token match
   for (const r of rooms) {
     const tokens = r.name.toLowerCase().split(/[\s-]+/);
     if (tokens.some((t) => t.length > 2 && lower.includes(t))) return r;
@@ -62,7 +60,6 @@ const hasAny = (text, words) => {
   return words.some((w) => new RegExp(`\\b${w}\\b`).test(lower));
 };
 
-// Turns a list of items into a brief textual summary
 const summarizeItems = (items, max = 5) => {
   if (items.length === 0) return null;
   const lines = items.slice(0, max).map(
@@ -72,7 +69,59 @@ const summarizeItems = (items, max = 5) => {
   return lines.join('\n');
 };
 
-export function answerQuery(rawText, { items, rooms, stats, roomById }) {
+// ─── Action intent detection ─────────────────────────────────────────────────
+// Returns { type, payload } or null if no action intent
+
+export function detectAction(text, { rooms, dark }) {
+  const lower = text.toLowerCase().trim();
+
+  // Navigate: go to / open page
+  if (/\b(go to|open|navigate to|take me to|show me|visit)\b/.test(lower)) {
+    if (/\b(dashboard|home|overview)\b/.test(lower))
+      return { type: 'navigate', payload: { path: '/', label: 'Dashboard' } };
+    if (/\b(inventory|items?|hardware)\b/.test(lower))
+      return { type: 'navigate', payload: { path: '/inventory', label: 'Inventory' } };
+    if (/\b(rooms?|locations?)\b/.test(lower))
+      return { type: 'navigate', payload: { path: '/rooms', label: 'Rooms' } };
+  }
+
+  // Dark mode toggle
+  if (/\b(dark mode|night mode|dark theme)\b/.test(lower)) {
+    if (/\b(on|enable|activate|switch to|turn on)\b/.test(lower) || !dark)
+      return { type: 'set_dark', payload: { value: true } };
+    return { type: 'set_dark', payload: { value: false } };
+  }
+  if (/\b(light mode|day mode|light theme)\b/.test(lower)) {
+    return { type: 'set_dark', payload: { value: false } };
+  }
+  if (/\b(toggle (dark|light|theme)|switch (dark|light|theme))\b/.test(lower)) {
+    return { type: 'toggle_dark' };
+  }
+
+  // Add item
+  if (/\b(add (an? )?(new )?item|create (an? )?item|new item|add hardware)\b/.test(lower)) {
+    // Try to parse a category from the text
+    const cat = matchCategory(lower);
+    return { type: 'open_add_item', payload: { category: cat } };
+  }
+
+  // Add room
+  if (/\b(add (an? )?(new )?room|create (a )?room|new room)\b/.test(lower)) {
+    return { type: 'navigate_rooms_add', payload: {} };
+  }
+
+  // Load demo data
+  if (/\b(load demo|demo data|sample data|seed data|populate)\b/.test(lower)) {
+    return { type: 'seed_demo' };
+  }
+
+  return null;
+}
+
+// ─── Text answers ─────────────────────────────────────────────────────────────
+
+export function answerQuery(rawText, ctx) {
+  const { items, rooms, stats, roomById } = ctx;
   const text = rawText.trim();
   if (!text) return "Ask me something about your inventory.";
 
@@ -80,20 +129,20 @@ export function answerQuery(rawText, { items, rooms, stats, roomById }) {
 
   // ─── Greetings ───────────────────────────────────────────────────────
   if (/^(hi|hello|hey|yo|sup|good (morning|afternoon|evening))\b/i.test(text)) {
-    return `Hi! I can answer questions about your inventory. Try asking things like:\n• "How many monitors do I have?"\n• "What's in Lab A-201?"\n• "Show me faulty items"\n• "Total inventory"`;
+    return `Hi! I'm your inventory assistant. I can:\n\n📊 Answer questions about your data\n🧭 Navigate the app for you\n➕ Open the "Add item" form\n🌙 Toggle dark / light mode\n\nTry: "open inventory", "add a keyboard", "how many monitors", "dark mode on"`;
   }
 
   if (/\b(thanks|thank you|thx|ty)\b/i.test(text)) {
-    return "Anytime. Anything else?";
+    return "Anytime! Anything else?";
   }
 
   if (/^(help|what can you do|commands?)\b/i.test(lower)) {
-    return `I can answer questions about your hardware inventory. Examples:\n\n📊 Counts\n  "how many keyboards"\n  "total units"\n\n🔍 Filters\n  "show faulty items"\n  "items in repair"\n\n🏢 Rooms\n  "what's in Lab A-201"\n  "how many rooms"\n\n🏷️ Brands\n  "do I have any Logitech"\n  "Dell monitors"\n\nI work on your live data, so answers update as your inventory changes.`;
+    return `Here's what I can do:\n\n🧭 Navigation\n  "go to inventory"\n  "open rooms"\n  "take me to dashboard"\n\n➕ Actions\n  "add a new keyboard"\n  "add a room"\n  "load demo data"\n\n🌙 Theme\n  "dark mode on"\n  "switch to light mode"\n\n📊 Queries\n  "how many monitors"\n  "show faulty items"\n  "what's in Lab A-201"\n  "total inventory"\n  "show recent items"`;
   }
 
   // ─── Empty state ──────────────────────────────────────────────────────
   if (items.length === 0) {
-    return "Your inventory is empty right now. Add some items from the Inventory tab, or load demo data from the Dashboard, and then ask me anything.";
+    return "Your inventory is empty. Say \"load demo data\" to populate it, or say \"add a new item\" to open the form.";
   }
 
   const category = matchCategory(text);
@@ -128,27 +177,20 @@ export function answerQuery(rawText, { items, rooms, stats, roomById }) {
       return true;
     });
     const total = sumQty(filtered);
-    if (filtered.length === 0) {
-      return `Nothing matching that in ${room.name}.`;
-    }
-    const filterDesc = [
-      condition && condition.toLowerCase(),
-      brand,
-      category && category.toLowerCase(),
-    ]
-      .filter(Boolean)
-      .join(' ');
+    if (filtered.length === 0) return `Nothing matching that in ${room.name}.`;
+    const filterDesc = [condition && condition.toLowerCase(), brand, category && category.toLowerCase()]
+      .filter(Boolean).join(' ');
     return `📍 ${room.name} — ${total} unit${total === 1 ? '' : 's'} ${filterDesc ? `of ${filterDesc} ` : ''}across ${filtered.length} record${filtered.length === 1 ? '' : 's'}:\n\n${summarizeItems(filtered)}`;
   }
 
   // ─── How many rooms ──────────────────────────────────────────────────
   if (/(how many|number of|count of) rooms?/i.test(text)) {
-    if (rooms.length === 0) return 'You have no rooms defined yet.';
+    if (rooms.length === 0) return 'You have no rooms defined yet. Say "add a room" to create one.';
     return `🏢 You have ${rooms.length} room${rooms.length === 1 ? '' : 's'}: ${rooms.map((r) => r.name).join(', ')}.`;
   }
 
   if (/^(rooms?|list rooms?|show rooms?|all rooms?)\b/i.test(text)) {
-    if (rooms.length === 0) return 'No rooms defined yet. Add one from the Rooms tab.';
+    if (rooms.length === 0) return 'No rooms yet. Say "add a room" and I\'ll take you there.';
     const lines = rooms.map((r) => {
       const c = sumQty(items.filter((i) => i.roomId === r.id));
       return `  • ${r.name} — ${c} unit${c === 1 ? '' : 's'}`;
@@ -177,12 +219,10 @@ export function answerQuery(rawText, { items, rooms, stats, roomById }) {
       const desc = [condition && condition.toLowerCase(), brand].filter(Boolean).join(' ');
       return `No ${desc ? desc + ' ' : ''}${category.toLowerCase()}s found.`;
     }
-
     if (/(how many|count|number)/i.test(text)) {
       const desc = [condition, brand].filter(Boolean).join(' ');
       return `📊 You have ${total} ${desc ? desc + ' ' : ''}${category.toLowerCase()}${total === 1 ? '' : 's'} across ${filtered.length} record${filtered.length === 1 ? '' : 's'}.`;
     }
-
     return `📦 ${total} ${category.toLowerCase()}${total === 1 ? '' : 's'} in ${filtered.length} record${filtered.length === 1 ? '' : 's'}:\n\n${summarizeItems(filtered)}`;
   }
 
@@ -220,21 +260,20 @@ export function answerQuery(rawText, { items, rooms, stats, roomById }) {
   }
 
   // ─── Fallback ────────────────────────────────────────────────────────
-  return `I'm not sure what you're asking. Try:\n• "how many monitors"\n• "show me faulty items"\n• "what's in Lab A-201"\n• "total inventory"\n\nOr type "help" for a list of things I can answer.`;
+  return `I'm not sure what you mean. Try:\n• "how many monitors"\n• "show me faulty items"\n• "go to inventory"\n• "add a new keyboard"\n• "dark mode on"\n\nOr type "help" for all commands.`;
 }
 
 export function suggestedQueries(items, rooms) {
   const suggestions = [];
   if (items.length === 0) {
-    return ['What can you do?', 'How do I add items?'];
+    return ['Load demo data', 'Add a new item', 'What can you do?'];
   }
   suggestions.push('Total inventory');
   const cats = CATEGORY_IDS.filter((c) => items.some((i) => i.category === c));
-  if (cats.length > 0) {
-    suggestions.push(`How many ${cats[0].toLowerCase()}s?`);
-  }
+  if (cats.length > 0) suggestions.push(`How many ${cats[0].toLowerCase()}s?`);
   const hasFaulty = items.some((i) => i.condition === 'Faulty');
   if (hasFaulty) suggestions.push('Show faulty items');
   if (rooms.length > 0) suggestions.push(`What's in ${rooms[0].name}?`);
+  suggestions.push('Go to inventory');
   return suggestions.slice(0, 4);
 }

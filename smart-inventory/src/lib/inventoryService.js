@@ -56,6 +56,51 @@ export const createItem = async (uid, data) => {
   });
 };
 
+/**
+ * Smart-add: if an item with the same category + brand + model already exists
+ * in the same room (or both unassigned), merge by adding quantity.
+ * Returns { merged: boolean, id: string }
+ */
+export const createItemOrMerge = async (uid, data) => {
+  const clean = sanitizeItem(data);
+  const roomTarget = clean.roomId || null;
+
+  // Build a query: same category + room
+  let q = query(
+    itemsCol(uid),
+    where('category', '==', clean.category),
+    where('roomId', '==', roomTarget)
+  );
+
+  const snap = await getDocs(q);
+
+  // Find an existing record with matching brand + model (case-insensitive)
+  const existing = snap.docs.find((d) => {
+    const item = d.data();
+    return (
+      (item.brand || '').trim().toLowerCase() === (clean.brand || '').toLowerCase() &&
+      (item.model || '').trim().toLowerCase() === (clean.model || '').toLowerCase()
+    );
+  });
+
+  if (existing) {
+    const currentQty = Number(existing.data().quantity) || 0;
+    const addedQty = Number(clean.quantity) || 0;
+    await updateDoc(existing.ref, {
+      quantity: currentQty + addedQty,
+      updatedAt: serverTimestamp(),
+    });
+    return { merged: true, id: existing.id, addedQty, newTotal: currentQty + addedQty };
+  }
+
+  const ref = await addDoc(itemsCol(uid), {
+    ...clean,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return { merged: false, id: ref.id };
+};
+
 export const updateItem = async (uid, id, data) => {
   return updateDoc(itemDoc(uid, id), {
     ...sanitizeItem(data),

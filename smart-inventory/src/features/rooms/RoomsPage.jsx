@@ -47,24 +47,32 @@ export default function RoomsPage() {
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" icon={Edit3} onClick={() => setRoomModal({ mode: 'edit', room })}>
-              Edit
-            </Button>
-            <Button
-              variant="danger-ghost"
-              icon={Trash2}
-              onClick={() => setConfirm({ type: 'room', target: room })}
-            >
-              Delete
-            </Button>
+              <Button icon={Plus} onClick={() => setItemModal({ mode: 'add', item: { roomId: activeRoomId } })}>
+                Add item
+              </Button>
+              <Button variant="ghost" icon={Edit3} onClick={() => setRoomModal({ mode: 'edit', room })}>
+                Edit
+              </Button>
+              <Button
+                variant="danger-ghost"
+                icon={Trash2}
+                onClick={() => setConfirm({ type: 'room', target: room })}
+              >
+                Delete
+              </Button>
+            </div>
           </div>
-        </div>
 
         {roomItems.length === 0 ? (
           <EmptyState
             icon={Package}
             title="No items in this room"
-            body="Assign items to this room from the inventory view, or edit an item to set its room."
+            body="Add your first item to this room using the button above."
+            action={
+              <Button icon={Plus} onClick={() => setItemModal({ mode: 'add', item: { roomId: activeRoomId } })}>
+                Add item
+              </Button>
+            }
           />
         ) : (
           <Card className="overflow-hidden">
@@ -152,7 +160,7 @@ export default function RoomsPage() {
                 key={r.id}
                 onClick={() => setActiveRoomId(r.id)}
                 className={cn(
-                  'animate-fade-up group text-left bg-white border border-cream-200 hover:border-accent-700 rounded-2xl p-5 shadow-soft transition-all'
+                  'animate-fade-up group text-left bg-white dark:bg-[#1e1d1a] border border-cream-200 dark:border-[#2a2925] hover:border-accent-700 dark:hover:border-orange-600 rounded-2xl p-5 shadow-soft transition-all'
                 )}
                 style={{ animationDelay: `${Math.min(i, 5) * 40}ms` }}
               >

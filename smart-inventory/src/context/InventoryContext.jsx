@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import {
   subscribeToItems,
   subscribeToRooms,
-  createItem,
+  createItemOrMerge,
   updateItem,
   deleteItem,
   createRoom,
@@ -101,7 +101,7 @@ export function InventoryProvider({ children }) {
     roomById,
     loading,
     error,
-    addItem: (data) => createItem(user.uid, data),
+    addItem: (data) => createItemOrMerge(user.uid, data),
     editItem: (id, data) => updateItem(user.uid, id, data),
     removeItem: (id) => deleteItem(user.uid, id),
     addRoom: (data) => createRoom(user.uid, data),

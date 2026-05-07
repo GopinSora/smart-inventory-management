@@ -2,9 +2,9 @@ import { cn } from '@/lib/helpers';
 
 export function Label({ children, required, className }) {
   return (
-    <div className={cn('text-[10px] uppercase tracking-[0.2em] font-mono text-ink-500', className)}>
+    <div className={cn('text-[10px] uppercase tracking-[0.2em] font-mono text-ink-500 dark:text-[#7a7870]', className)}>
       {children}
-      {required && <span className="text-accent-700 ml-1">*</span>}
+      {required && <span className="text-accent-700 dark:text-orange-400 ml-1">*</span>}
     </div>
   );
 }
@@ -18,7 +18,7 @@ export function Field({ label, required, children, hint, error }) {
           <span
             className={cn(
               'text-[10px] font-mono',
-              error ? 'text-rose-600' : 'text-ink-400'
+              error ? 'text-rose-600 dark:text-rose-400' : 'text-ink-400 dark:text-[#7a7870]'
             )}
           >
             {error || hint}
@@ -49,7 +49,7 @@ export function SectionHeading({ kicker, title, action, className }) {
     <div className={cn('flex items-end justify-between gap-4 mb-5', className)}>
       <div>
         <Label className="mb-1.5">{kicker}</Label>
-        <h2 className="font-display text-2xl md:text-3xl text-ink-900 leading-tight">
+        <h2 className="font-display text-2xl md:text-3xl text-ink-900 dark:text-[#f0ede6] leading-tight">
           {title}
         </h2>
       </div>
@@ -60,10 +60,10 @@ export function SectionHeading({ kicker, title, action, className }) {
 
 export function EmptyState({ icon: Icon, title, body, action }) {
   return (
-    <div className="border border-dashed border-cream-300 bg-cream-50/50 rounded-2xl py-14 px-6 flex flex-col items-center text-center">
-      {Icon && <Icon className="w-9 h-9 text-cream-400 mb-4" strokeWidth={1.5} />}
-      <div className="font-display text-xl text-ink-800 mb-1">{title}</div>
-      {body && <p className="text-sm text-ink-500 max-w-md mb-5 text-balance">{body}</p>}
+    <div className="border border-dashed border-cream-300 dark:border-[#38362f] bg-cream-50/50 dark:bg-[#1a1916]/50 rounded-2xl py-14 px-6 flex flex-col items-center text-center">
+      {Icon && <Icon className="w-9 h-9 text-cream-400 dark:text-[#38362f] mb-4" strokeWidth={1.5} />}
+      <div className="font-display text-xl text-ink-800 dark:text-[#f0ede6] mb-1">{title}</div>
+      {body && <p className="text-sm text-ink-500 dark:text-[#7a7870] max-w-md mb-5 text-balance">{body}</p>}
       {action}
     </div>
   );
@@ -73,7 +73,7 @@ export function Card({ children, className, ...props }) {
   return (
     <div
       className={cn(
-        'bg-white border border-cream-200 rounded-2xl shadow-soft',
+        'bg-white dark:bg-[#1e1d1a] border border-cream-200 dark:border-[#2a2925] rounded-2xl shadow-soft',
         className
       )}
       {...props}

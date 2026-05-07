@@ -17,8 +17,8 @@ function FilterChip({ label, icon: Icon, active, onClick }) {
       className={cn(
         'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border transition-colors font-medium',
         active
-          ? 'bg-accent-50 border-accent-700 text-accent-800'
-          : 'bg-white border-cream-200 text-ink-600 hover:border-cream-400'
+          ? 'bg-accent-50 dark:bg-orange-950/40 border-accent-700 dark:border-orange-600 text-accent-800 dark:text-orange-300'
+          : 'bg-white dark:bg-[#1e1d1a] border-cream-200 dark:border-[#2a2925] text-ink-600 dark:text-[#7a7870] hover:border-cream-400 dark:hover:border-[#6b6655]'
       )}
     >
       {Icon && <Icon className="w-3 h-3" />}
