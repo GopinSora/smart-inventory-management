@@ -127,6 +127,7 @@ export const createRoom = async (uid, data) => {
   return addDoc(roomsCol(uid), {
     name: (data.name || '').trim(),
     description: (data.description || '').trim(),
+    icon: data.icon || 'lab',
     createdAt: serverTimestamp(),
   });
 };
@@ -135,6 +136,7 @@ export const updateRoom = async (uid, id, data) => {
   return updateDoc(roomDoc(uid, id), {
     name: (data.name || '').trim(),
     description: (data.description || '').trim(),
+    icon: data.icon || 'lab',
   });
 };
 
@@ -151,9 +153,9 @@ export const deleteRoom = async (uid, id) => {
 // ─── Demo seed ─────────────────────────────────────────────────────────────
 
 const SAMPLE_ROOMS = [
-  { name: 'Lab A-201', description: 'AI & Deep Learning Lab' },
-  { name: 'Lab B-105', description: 'Networking & Hardware Bench' },
-  { name: 'Storage 02', description: 'Spare equipment & repairs' },
+  { name: 'Lab A-201', description: 'AI & Deep Learning Lab', icon: 'lab' },
+  { name: 'Lab B-105', description: 'Networking & Hardware Bench', icon: 'network' },
+  { name: 'Storage 02', description: 'Spare equipment & repairs', icon: 'storage' },
 ];
 
 const SAMPLE_ITEMS = [
@@ -165,6 +167,7 @@ const SAMPLE_ITEMS = [
   { category: 'Monitor', brand: 'LG', model: '27GP850-B', specifications: '27" QHD IPS 165Hz', quantity: 2, condition: 'Working', roomIdx: 1 },
   { category: 'CPU', brand: 'Lenovo', model: 'ThinkCentre M75q', specifications: 'Ryzen 5 PRO, 16GB, 512GB SSD', quantity: 8, purchaseDate: '2024-05-12', condition: 'Working', roomIdx: 1 },
   { category: 'Keyboard', brand: 'Keychron', model: 'K8 Pro', specifications: 'Mechanical, hot-swap, QMK', quantity: 5, purchaseDate: '2025-03-22', condition: 'Working', roomIdx: 1 },
+  { category: 'CPU', brand: 'Apple', model: 'Mac Mini M2', specifications: '8-core CPU, 10-core GPU, 16GB unified memory', quantity: 2, purchaseDate: '2025-04-01', condition: 'Working', roomIdx: null },
 ];
 
 export const seedDemoData = async (uid) => {

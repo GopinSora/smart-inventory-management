@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { LayoutDashboard, Boxes, DoorOpen, Plus, Package, Moon, Sun } from 'lucide-react';
 import { useInventory } from '@/context/InventoryContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import Button from '@/components/ui/Button';
 import UserMenu from '@/components/ui/UserMenu';
 import ItemFormModal from '@/features/inventory/ItemFormModal';
@@ -18,6 +19,10 @@ export default function AppShell() {
   const { stats, rooms } = useInventory();
   const { dark, toggle } = useTheme();
   const [showAdd, setShowAdd] = useState(false);
+
+  useKeyboardShortcuts([
+    { key: 'n', action: () => setShowAdd(true), description: 'Add new item' },
+  ]);
 
   return (
     <div className="min-h-screen bg-cream-50 dark:bg-[#141412] text-ink-900 dark:text-[#f0ede6] font-sans transition-colors duration-300">

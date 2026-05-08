@@ -30,12 +30,12 @@ export default function ConfirmDeleteModal({ type, target, onClose, onConfirmed 
     <Modal onClose={onClose} size="sm">
       <div className="p-6">
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 shrink-0 bg-rose-50 border border-rose-200 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-rose-600" />
+          <div className="w-11 h-11 shrink-0 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-full flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
           </div>
           <div className="flex-1">
-            <h3 className="font-display text-xl text-ink-900 mb-1.5">{title}</h3>
-            <p className="text-sm text-ink-600 leading-relaxed">{body}</p>
+            <h3 className="font-display text-xl text-ink-900 dark:text-[#f0ede6] mb-1.5">{title}</h3>
+            <p className="text-sm text-ink-600 dark:text-[#7a7870] leading-relaxed">{body}</p>
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 mt-6">

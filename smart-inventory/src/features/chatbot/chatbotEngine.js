@@ -115,6 +115,16 @@ export function detectAction(text, { rooms, dark }) {
     return { type: 'seed_demo' };
   }
 
+  // Low stock check
+  if (/\b(low stock|low items?|running low|almost out|short on|shortage)\b/.test(lower)) {
+    return { type: 'show_low_stock' };
+  }
+
+  // Export
+  if (/\b(export|download|csv|spreadsheet)\b/.test(lower)) {
+    return { type: 'export_csv' };
+  }
+
   return null;
 }
 
@@ -137,7 +147,7 @@ export function answerQuery(rawText, ctx) {
   }
 
   if (/^(help|what can you do|commands?)\b/i.test(lower)) {
-    return `Here's what I can do:\n\n🧭 Navigation\n  "go to inventory"\n  "open rooms"\n  "take me to dashboard"\n\n➕ Actions\n  "add a new keyboard"\n  "add a room"\n  "load demo data"\n\n🌙 Theme\n  "dark mode on"\n  "switch to light mode"\n\n📊 Queries\n  "how many monitors"\n  "show faulty items"\n  "what's in Lab A-201"\n  "total inventory"\n  "show recent items"`;
+    return `Here's what I can do:\n\n🧭 Navigation\n  "go to inventory"\n  "open rooms"\n  "take me to dashboard"\n\n➕ Actions\n  "add a new keyboard"\n  "add a room"\n  "load demo data"\n\n📤 Data\n  "export inventory" — download CSV\n  "show low stock" — items ≤ 3 units\n\n🌙 Theme\n  "dark mode on"\n  "switch to light mode"\n\n📊 Queries\n  "how many monitors"\n  "show faulty items"\n  "what's in Lab A-201"\n  "total inventory"\n  "show recent items"`;
   }
 
   // ─── Empty state ──────────────────────────────────────────────────────
@@ -264,16 +274,16 @@ export function answerQuery(rawText, ctx) {
 }
 
 export function suggestedQueries(items, rooms) {
-  const suggestions = [];
   if (items.length === 0) {
     return ['Load demo data', 'Add a new item', 'What can you do?'];
   }
-  suggestions.push('Total inventory');
+  const suggestions = [];
+  suggestions.push('Show low stock');
   const cats = CATEGORY_IDS.filter((c) => items.some((i) => i.category === c));
   if (cats.length > 0) suggestions.push(`How many ${cats[0].toLowerCase()}s?`);
   const hasFaulty = items.some((i) => i.condition === 'Faulty');
   if (hasFaulty) suggestions.push('Show faulty items');
   if (rooms.length > 0) suggestions.push(`What's in ${rooms[0].name}?`);
-  suggestions.push('Go to inventory');
+  suggestions.push('Export inventory');
   return suggestions.slice(0, 4);
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, LogIn, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, ArrowRight, AlertTriangle, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AuthLayout from './AuthLayout';
 import Button from '@/components/ui/Button';
@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [googleDomainError, setGoogleDomainError] = useState(false);
 
   const validate = () => {
     const e = {};
@@ -58,53 +59,106 @@ export default function LoginPage() {
   };
 
   const handleGoogle = async () => {
+    setGoogleDomainError(false);
     setGoogleSubmitting(true);
     try {
       await signInWithGoogle();
-      toast.success('Signed in');
+      toast.success('Signed in with Google');
       navigate(from, { replace: true });
     } catch (err) {
-      toast.error(friendlyAuthError(err.code));
+      if (err.code === 'auth/unauthorized-domain') {
+        setGoogleDomainError(true);
+      } else {
+        toast.error(friendlyAuthError(err.code));
+      }
     } finally {
       setGoogleSubmitting(false);
     }
   };
 
+  const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
+
   return (
     <AuthLayout>
       <div className="animate-fade-up">
-        <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-ink-500 mb-2">
+        <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-ink-500 dark:text-[#7a7870] mb-2">
           Sign in
         </div>
-        <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-2">
+        <h2 className="font-display text-3xl md:text-4xl text-ink-900 dark:text-[#f0ede6] leading-tight mb-2">
           Welcome back.
         </h2>
-        <p className="text-ink-500 text-sm mb-8">
+        <p className="text-ink-500 dark:text-[#7a7870] text-sm mb-8">
           Log in to access your inventory dashboard.
         </p>
 
+        {/* Google button */}
         <button
           type="button"
           onClick={handleGoogle}
           disabled={googleSubmitting}
-          className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white border border-cream-300 hover:border-cream-400 hover:bg-cream-50 rounded-lg text-sm font-medium text-ink-800 transition-colors disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white dark:bg-[#1e1d1a] border border-cream-300 dark:border-[#38362f] hover:border-cream-400 dark:hover:border-[#6b6655] hover:bg-cream-50 dark:hover:bg-[#2a2925] rounded-lg text-sm font-medium text-ink-800 dark:text-[#f0ede6] transition-colors disabled:opacity-50"
         >
           <GoogleIcon />
           {googleSubmitting ? 'Connecting…' : 'Continue with Google'}
         </button>
 
+        {/* Unauthorized domain error banner */}
+        {googleDomainError && (
+          <div className="mt-3 p-4 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/30 space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-rose-800 dark:text-rose-300">
+                  Domain not authorized for Google Sign-In
+                </p>
+                <p className="text-xs text-rose-700 dark:text-rose-400 mt-1">
+                  The domain{' '}
+                  <code className="px-1 py-0.5 bg-rose-100 dark:bg-rose-900/40 rounded font-mono text-[11px]">
+                    {currentDomain}
+                  </code>{' '}
+                  needs to be added to your Firebase project's authorized domains.
+                </p>
+              </div>
+            </div>
+            <div className="pl-6 space-y-1.5 text-xs text-rose-700 dark:text-rose-400">
+              <p className="font-semibold">Fix in 3 steps:</p>
+              <ol className="list-decimal list-inside space-y-1 text-rose-600 dark:text-rose-400">
+                <li>Open Firebase Console → Authentication → Settings</li>
+                <li>Click <strong>"Add domain"</strong> under Authorized domains</li>
+                <li>
+                  Add{' '}
+                  <code className="px-1 py-0.5 bg-rose-100 dark:bg-rose-900/40 rounded font-mono text-[10px]">
+                    {currentDomain}
+                  </code>
+                </li>
+              </ol>
+              <a
+                href="https://console.firebase.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 mt-2 text-rose-700 dark:text-rose-400 hover:text-rose-900 dark:hover:text-rose-200 font-medium underline underline-offset-2"
+              >
+                Open Firebase Console <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            <p className="pl-6 text-xs text-rose-600 dark:text-rose-500">
+              Email/password sign-in works without this fix.
+            </p>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-cream-200" />
-          <span className="text-[10px] font-mono uppercase tracking-widest text-ink-400">
+          <div className="flex-1 h-px bg-cream-200 dark:bg-[#2a2925]" />
+          <span className="text-[10px] font-mono uppercase tracking-widest text-ink-400 dark:text-[#7a7870]">
             or with email
           </span>
-          <div className="flex-1 h-px bg-cream-200" />
+          <div className="flex-1 h-px bg-cream-200 dark:bg-[#2a2925]" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Email" required error={errors.email}>
             <div className="relative">
-              <Mail className="w-4 h-4 text-ink-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-ink-400 dark:text-[#7a7870] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <Input
                 type="email"
                 value={email}
@@ -123,14 +177,14 @@ export default function LoginPage() {
             error={errors.password}
             hint={
               !errors.password && (
-                <Link to="/forgot-password" className="text-accent-700 hover:text-accent-800 normal-case tracking-normal">
+                <Link to="/forgot-password" className="text-accent-700 dark:text-orange-400 hover:text-accent-800 dark:hover:text-orange-300 normal-case tracking-normal">
                   Forgot?
                 </Link>
               )
             }
           >
             <div className="relative">
-              <Lock className="w-4 h-4 text-ink-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-ink-400 dark:text-[#7a7870] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
@@ -143,7 +197,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 dark:text-[#7a7870] hover:text-ink-700 dark:hover:text-[#f0ede6]"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -162,11 +216,11 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-8 text-sm text-ink-600 text-center">
+        <p className="mt-8 text-sm text-ink-600 dark:text-[#7a7870] text-center">
           Don't have an account?{' '}
           <Link
             to="/signup"
-            className="text-accent-700 hover:text-accent-800 font-medium inline-flex items-center gap-1"
+            className="text-accent-700 dark:text-orange-400 hover:text-accent-800 dark:hover:text-orange-300 font-medium inline-flex items-center gap-1"
           >
             Create one <ArrowRight className="w-3.5 h-3.5" />
           </Link>

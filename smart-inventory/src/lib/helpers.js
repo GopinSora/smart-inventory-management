@@ -43,7 +43,10 @@ export const friendlyAuthError = (code) => {
     'auth/too-many-requests': 'Too many attempts. Wait a moment and try again.',
     'auth/network-request-failed': 'Network error. Check your connection.',
     'auth/popup-closed-by-user': 'Sign-in was cancelled.',
-    'auth/popup-blocked': 'Popup was blocked by your browser.',
+    'auth/popup-blocked': 'Popup was blocked by your browser. Allow popups and try again.',
+    'auth/unauthorized-domain': 'This domain is not authorized for Google Sign-In. Add it to Firebase Console → Authentication → Settings → Authorized domains.',
+    'auth/cancelled-popup-request': 'Another sign-in is already in progress.',
+    'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
   };
   return map[code] || 'Something went wrong. Please try again.';
 };

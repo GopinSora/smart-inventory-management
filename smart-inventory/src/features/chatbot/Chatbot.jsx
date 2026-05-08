@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { answerQuery, detectAction, suggestedQueries } from './chatbotEngine';
 import { cn, initials } from '@/lib/helpers';
+import { exportInventoryCSV } from '@/lib/exportCsv';
 import ItemFormModal from '@/features/inventory/ItemFormModal';
 import toast from 'react-hot-toast';
 
@@ -22,7 +23,7 @@ export default function Chatbot() {
     {
       id: 'welcome',
       role: 'bot',
-      text: `Hi${user?.displayName ? `, ${user.displayName.split(' ')[0]}` : ''}! I'm your inventory assistant.\n\nI can answer questions, navigate the app, add items, and toggle dark mode.\n\nTry: "go to inventory", "add a keyboard", "how many monitors", or type "help".`,
+      text: `Hi${user?.displayName ? `, ${user.displayName.split(' ')[0]}` : ''}! I'm your inventory assistant.\n\nI can:\n📊 Answer questions about your data\n🧭 Navigate the app for you\n➕ Open the "Add item" form\n📤 Export inventory to CSV\n⚠️ Check low-stock items\n🌙 Toggle dark / light mode\n\nTry: "show low stock", "export inventory", "go to rooms", or type "help".`,
     },
   ]);
   const [thinking, setThinking] = useState(false);
@@ -106,6 +107,29 @@ export default function Chatbot() {
               seedDemo()
                 .then(() => addBotMessage('✅ Demo data loaded! You can now explore your inventory.'))
                 .catch(() => addBotMessage('❌ Could not load demo data. Please try from the Dashboard.'));
+            }
+            break;
+          }
+          case 'show_low_stock': {
+            const LOW = 3;
+            const lowItems = items.filter((i) => Number(i.quantity || 0) <= LOW);
+            if (lowItems.length === 0) {
+              addBotMessage(`✅ No low-stock items! Everything is above ${LOW} units.`);
+            } else {
+              const lines = lowItems.slice(0, 8).map(
+                (i) => `• ${i.brand} ${i.model} — ${i.quantity} unit${i.quantity === 1 ? '' : 's'}`
+              );
+              if (lowItems.length > 8) lines.push(`…and ${lowItems.length - 8} more.`);
+              addBotMessage(`⚠️ ${lowItems.length} low-stock item${lowItems.length !== 1 ? 's' : ''} (≤ ${LOW} units):\n\n${lines.join('\n')}`);
+            }
+            break;
+          }
+          case 'export_csv': {
+            if (items.length === 0) {
+              addBotMessage('Your inventory is empty — nothing to export.');
+            } else {
+              exportInventoryCSV(items, inventoryCtx.roomById);
+              addBotMessage(`✅ Exporting ${items.length} item${items.length !== 1 ? 's' : ''} to CSV…`);
             }
             break;
           }
